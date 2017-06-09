@@ -22,6 +22,16 @@
 Defining functions to be used in script
 */
 
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
+
 function SMstimuli(phrase, display, condition) {
   this.phrase = phrase;
   this.display = display;
@@ -33,7 +43,7 @@ function SMteststimuli(phrase, condition) {
   this.condition = condition;
 }
 
-function defineSMstimuli(stim) {
+function defineSMstimuli(stim, display) {
   var trialArray = [];
 
   // For loop creates each trial and adds them to the timeline
@@ -41,17 +51,18 @@ function defineSMstimuli(stim) {
 
     var phrase = stim[i];
     var audio = prefix + "Silence" + suffix;
-    var SMcondition = "YOU";
+    var condition = "YOU";
+    var disp = display[i];
     // if it is NOT in you condition, changes audio to stimulus
     if ($.inArray(phrase, youStim) === -1) {
       audio = prefix + stim[i] + suffix;
-      SMcondition = "OTHER";
+      condition = "OTHER";
     }
 
     var SMresponse_trial = {
       type: "single-audiodelay",
       stimulus: audio,
-      prompt: "<h1>" + SMcondition + "</h1>" + "<p>" + phrase.toUpperCase() + "</p>",
+      prompt: "<h1>" + condition + "</h1>" + "<p>" + disp.toUpperCase() + "</p>",
       timing_response: 4500,
       // careful - too long a delay and it will skip (since set to 4500ms)
       delay: 1,
@@ -59,13 +70,57 @@ function defineSMstimuli(stim) {
       response_ends_trial: false,
       data: {
         phrase: phrase,
-        display: phrase.toUpperCase(),
-        condition: SMcondition
+        display: disp.toUpperCase(),
+        condition: condition
       }
     }
 
     trialArray.push(SMresponse_trial)
   }
+
+  trialArray = shuffleArray(trialArray);
+  return trialArray
+}
+
+function defineSMtestStimuli(stim, youStim, otherStim) {
+  var trialArray = [];
+
+  for (var i = 0; i < stim.length; i++) {
+
+    var phrase = stim[i];
+    var cresp = "N"
+
+    if ($.inArray(phrase, youStim) !== -1) {
+      cresp = "M";
+    } else if ($.inArray(phrase, otherStim) !== -1) {
+      cresp = "O";
+    }
+
+    var SMtest_responsetrial = {
+      type: "single-stim",
+      choices: ["m", "o", "n"],
+      is_html: true,
+      prompt: "<p>'M' = ME</p> <br> <p>'O' = OTHER</p> <br> <p>'N' = NEW</p>",
+      timing_post_trial: 1000,
+      stimulus: "<p>" + phrase + "</p>",
+      data: {
+        phrase: phrase,
+        cresp: cresp
+      },
+      on_finish: function(data) {
+        var p_response = String.fromCharCode(data.key_press);
+        var acc = false;
+        if (p_response === data.cresp) {
+          acc = true
+        }
+        jsPsych.data.addDataToLastTrial({p_response: p_response, acc: acc});
+      }
+    }
+    trialArray.push(SMtest_responsetrial);
+
+
+  }
+  trialArray = shuffleArray(trialArray)
   return trialArray
 }
 
@@ -79,84 +134,56 @@ var suffix = ".wav"
 // to get half completed phrases
 // 1. Write a function that chops a bit of each sentence off, replaces with _
 // 2. Have 2 stim arrays - one for audio, one for display
-var youStim = ["Marks and spencers", "Sticks and stones", "Rest and relaxation"];
-var otherStim = ["Wine and dine", "Plus and minus", "Rich and famous"];
+
+// What is played
+var youStim = [ "Marks and spencers", "Sticks and stones", "Rest and relaxation",
+"Knife and fork", "Health and safety", "Table and chairs", "Husband and wife",
+"Mother and father", "Romeo and juliet", "Accident and emergency", "Apples and pears",
+"Snakes and ladders", "East and west", "Rock and roll", "Friends and family" ];
+
+var otherStim = ["Wine and dine", "Plus and minus", "Rich and famous",
+"Cops and robbers", "Trial and error", "Life and death", "Doom and gloom",
+"Aunt and uncle", "Batman and robin", "Gin and tonic", "North and south",
+"Winners and losers", "Black and white", "Hot and cold", "Bed and breakfast"];
+
+// What is displayed visually
+var youDisp = ["Marks and Spenc___", "Sticks and sto___", "Rest and rela______",
+"Knife and fo__", "Health and saf___", "Table and ch____", "Husband and wi__",
+"Mother and fa____", "Romeo and ju____", "Accident and emer_____", "Apples and pe___",
+"Snakes and lad____", "East and we__", "Rock and ro__", "Friends and fam___"];
+
+var otherDisp = ["Wine and di__", "Plus and min__", "Rich and fam___",
+"Cops and rob____", "Trial and er___", "Life and de___", "Doom and gl___",
+"Aunt and un___", "Batman and Ro___", "Gin and to___", "North and so___",
+"Winners and lo____", "Black and wh___", "Hot and co__", "Bed and brea_____"];
+
+var newStim = ["Time and again", "Drum and bass", "Skin and bone", "Suited and booted",
+"Map and compass", "Shampoo and conditioner", "Done and dusted", "Town and gown",
+"Run and hide", "Trade and industry", "Ebony and ivory", "Live and learn"];
+
 var pracStim = [];
+var pracDisp = [];
 var pracLength = 6;
 
-for (var i = 0; i < pracLength/2; i++) {
+var mainStim = [];
+var mainDisp = [];
+var mainLength = 24;
+
+for (i = 0; i < pracLength/2; i++) {
   pracStim.push(youStim[i]);
   pracStim.push(otherStim[i]);
+  pracDisp.push(youDisp[i]);
+  pracDisp.push(otherDisp[i]);
 }
 
+for (j = pracLength/2; j < mainLength/2; j++) {
+  mainStim.push(youStim[j]);
+  mainStim.push(otherStim[j]);
+  mainDisp.push(youDisp[j]);
+  mainDisp.push(otherDisp[j]);
+}
 
-// Defines the main task stimuli to be used
-var SMmain_stimuli = new Array();
-// 1 = YOU, 2 = OTHER
-SMmain_stimuli[0] = new SMstimuli("Knife and fork", "KNIFE AND FO__", 1)
-SMmain_stimuli[1] = new SMstimuli("Health and safety", "HEALTH AND SAF____", 1)
-SMmain_stimuli[2] = new SMstimuli("Cops and robbers", "COPS AND ROB____", 2)
-SMmain_stimuli[3] = new SMstimuli("Table and chairs", "TABLE AND CH____", 1)
-SMmain_stimuli[4] = new SMstimuli("Husband and wife", "HUSBAND AND WI__", 1)
-SMmain_stimuli[5] = new SMstimuli("Trial and error", "TRIAL AND ER___", 2)
-SMmain_stimuli[6] = new SMstimuli("Mother and father", "MOTHER AND FA____", 1)
-SMmain_stimuli[7] = new SMstimuli("Romeo and juliet", "ROMEO AND JU____", 1)
-SMmain_stimuli[8] = new SMstimuli("Life and death", "LIFE AND DE__", 2)
-SMmain_stimuli[9] = new SMstimuli("Accident and emergency", "ACCIDENT AND EMER__", 1)
-SMmain_stimuli[10] = new SMstimuli("Doom and gloom", "DOOM AND GL___", 2)
-SMmain_stimuli[11] = new SMstimuli("Apples and pears", "APPLES AND PE___", 1)
-SMmain_stimuli[12] = new SMstimuli("Aunt and uncle", "AUNT AND UN___", 2)
-SMmain_stimuli[13] = new SMstimuli("Batman and robin", "BATMAN AND RO___", 2)
-SMmain_stimuli[14] = new SMstimuli("Snakes and ladders", "SNAKES AND LAD____", 1)
-SMmain_stimuli[15] = new SMstimuli("Gin and tonic", "GIN AND TO____", 2)
-SMmain_stimuli[16] = new SMstimuli("East and west", "EAST AND WE__", 1)
-SMmain_stimuli[17] = new SMstimuli("North and south", "NORTH AND SO___", 2)
-SMmain_stimuli[18] = new SMstimuli("Winners and losers", "WINNERS AND LO____", 2)
-SMmain_stimuli[19] = new SMstimuli("Black and white", "BLACK AND WH___", 2)
-SMmain_stimuli[20] = new SMstimuli("Rock and roll", "ROCK AND RO__", 1)
-SMmain_stimuli[21] = new SMstimuli("Hot and cold", "HOT AND CO__", 2)
-SMmain_stimuli[22] = new SMstimuli("Bed and breakfast", "BED AND BREA____", 2)
-SMmain_stimuli[23] = new SMstimuli("Friends and family", "FRIENDS AND FAM___", 1)
-
-var SM_teststimuli = new Array();
-
-SM_teststimuli[0] = new SMteststimuli("Knife and fork", 1)
-SM_teststimuli[1] = new SMteststimuli("Health and safety", 1)
-SM_teststimuli[2] = new SMteststimuli("Cops and robbers", 2)
-SM_teststimuli[3] = new SMteststimuli("Table and chairs", 1)
-SM_teststimuli[4] = new SMteststimuli("Husband and wife", 1)
-SM_teststimuli[5] = new SMteststimuli("Trial and error", 2)
-SM_teststimuli[6] = new SMteststimuli("Mother and father", 1)
-SM_teststimuli[7] = new SMteststimuli("Romeo and juliet", 1)
-SM_teststimuli[8] = new SMteststimuli("Life and death", 2)
-SM_teststimuli[9] = new SMteststimuli("Accident and emergency", 1)
-SM_teststimuli[10] = new SMteststimuli("Doom and gloom", 2)
-SM_teststimuli[11] = new SMteststimuli("Apples and pears", 1)
-SM_teststimuli[12] = new SMteststimuli("Aunt and uncle", 2)
-SM_teststimuli[13] = new SMteststimuli("Batman and robin", 2)
-SM_teststimuli[14] = new SMteststimuli("Snakes and ladders", 1)
-SM_teststimuli[15] = new SMteststimuli("Gin and tonic", 2)
-SM_teststimuli[16] = new SMteststimuli("East and west", 1)
-SM_teststimuli[17] = new SMteststimuli("North and south", 2)
-SM_teststimuli[18] = new SMteststimuli("Winners and losers", 2)
-SM_teststimuli[19] = new SMteststimuli("Black and white", 2)
-SM_teststimuli[20] = new SMteststimuli("Rock and roll", 1)
-SM_teststimuli[21] = new SMteststimuli("Hot and cold", 2)
-SM_teststimuli[22] = new SMteststimuli("Bed and breakfast", 2)
-SM_teststimuli[23] = new SMteststimuli("Friends and family", 1)
-SM_teststimuli[24] = new SMteststimuli("Time and again", 3)
-SM_teststimuli[25] = new SMteststimuli("Drum and bass", 3)
-SM_teststimuli[26] = new SMteststimuli("Skin and bone", 3)
-SM_teststimuli[27] = new SMteststimuli("Suited and booted", 3)
-SM_teststimuli[28] = new SMteststimuli("Map and compass", 3)
-SM_teststimuli[29] = new SMteststimuli("Shampoo and conditioner", 3)
-SM_teststimuli[30] = new SMteststimuli("Done and dusted", 3)
-SM_teststimuli[31] = new SMteststimuli("Town and gown", 3)
-SM_teststimuli[32] = new SMteststimuli("Run and hide", 3)
-SM_teststimuli[33] = new SMteststimuli("Trade and industry", 3)
-SM_teststimuli[34] = new SMteststimuli("Ebony and ivory", 3)
-SM_teststimuli[35] = new SMteststimuli("Live and learn", 3)
-
+var testStim = mainStim.concat(newStim);
 
 /*
 * Defining jsPsych variables
@@ -198,90 +225,23 @@ var SMtest_instructions = {
 
 timeline.push(SM_Instructions);
 
-var practice_block = defineSMstimuli(pracStim);
-console.log(practice_block)
-for (var i = 1; i < practice_block.length; i++) {
+var practice_block = defineSMstimuli(pracStim, pracDisp);
+for (var i = 0; i < practice_block.length; i++) {
   timeline.push(practice_block[i]);
 }
 
 timeline.push(SMmain_instructions)
 
-
-// For loop creates each trial and adds them to the timeline
-for (var i = 0; i < SMmain_stimuli.length; i++) {
-
-  // defaults to silence and "YOU" condition
-  var audio = "sounds/Silence.wav";
-  var SMcondition = "YOU";
-  // if OTHER condition, retrives the audio to be played
-  if (SMmain_stimuli[i].condition === 2) {
-    audio = "sounds/" + SMmain_stimuli[i].phrase + ".wav";
-    SMcondition = "OTHER";
-  }
-
-  var SMresponse_trial = {
-    type: "single-audiodelay",
-    stimulus: audio,
-    prompt: "<h1>" + SMcondition + "</h1>" + "<p>" + SMmain_stimuli[i].display + "</p>",
-    timing_response: 4500,
-    // careful - too long a delay and it will skip (since set to 4500ms)
-    delay: 1,
-    timing_post_trial: 500,
-    response_ends_trial: false,
-    data: {
-      phrase: SMmain_stimuli[i].phrase,
-      display: SMmain_stimuli[i].display,
-      condition: SMmain_stimuli[i].condition
-    }
-  }
-
-  timeline.push(SMresponse_trial);
+var main_block = defineSMstimuli(mainStim, mainDisp);
+for (var i = 0; i < main_block.length; i++) {
+  timeline.push(main_block[i]);
 }
-
-
-
 
 timeline.push(SMtest_instructions);
 
-
-
-
-
-for (var i = 0; i < SM_teststimuli.length; i++) {
-  var phrase = SM_teststimuli[i].phrase.toUpperCase();
-  var condition = SM_teststimuli[i].condition
-  var cresp = ""
-  switch (condition) {
-    case 1: cresp = "M"
-    break
-    case 2: cresp = "O"
-    break;
-    case 3: cresp = "N"
-  }
-
-  var SMtest_responsetrial = {
-    type: "single-stim",
-    choices: ["m", "o", "n"],
-    is_html: true,
-    prompt: "<p>'M' = ME</p> <br> <p>'O' = OTHER</p> <br> <p>'N' = NEW</p>",
-    timing_post_trial: 1000,
-    stimulus: "<p>" + phrase + "</p>",
-    data: {
-      phrase: phrase,
-      condition: condition,
-      cresp: cresp
-    },
-    on_finish: function(data) {
-      var p_response = String.fromCharCode(data.key_press);
-      var acc = false;
-      if (p_response === data.cresp) {
-        acc = true
-    }
-    jsPsych.data.addDataToLastTrial({p_response: p_response, acc: acc});
-
-  }
-}
-timeline.push(SMtest_responsetrial);
+var test_block = defineSMtestStimuli(testStim, youStim, otherStim);
+for (var i = 0; i < test_block.length; i++) {
+  timeline.push(test_block[i]);
 }
 
 
