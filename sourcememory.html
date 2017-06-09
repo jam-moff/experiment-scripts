@@ -33,32 +33,62 @@ function SMteststimuli(phrase, condition) {
   this.condition = condition;
 }
 
+function defineSMstimuli(stim) {
+  var trialArray = [];
+
+  // For loop creates each trial and adds them to the timeline
+  for (var i = 0; i < stim.length; i++) {
+
+    var phrase = stim[i];
+    var audio = prefix + "Silence" + suffix;
+    var SMcondition = "YOU";
+    // if it is NOT in you condition, changes audio to stimulus
+    if ($.inArray(phrase, youStim) === -1) {
+      audio = prefix + stim[i] + suffix;
+      SMcondition = "OTHER";
+    }
+
+    var SMresponse_trial = {
+      type: "single-audiodelay",
+      stimulus: audio,
+      prompt: "<h1>" + SMcondition + "</h1>" + "<p>" + phrase.toUpperCase() + "</p>",
+      timing_response: 4500,
+      // careful - too long a delay and it will skip (since set to 4500ms)
+      delay: 1,
+      timing_post_trial: 500,
+      response_ends_trial: false,
+      data: {
+        phrase: phrase,
+        display: phrase.toUpperCase(),
+        condition: SMcondition
+      }
+    }
+
+    trialArray.push(SMresponse_trial)
+  }
+  return trialArray
+}
+
 
 /* Definining stimuli to be used in study
 *
 */
 var prefix = "sounds/"
 var suffix = ".wav"
+
+// to get half completed phrases
+// 1. Write a function that chops a bit of each sentence off, replaces with _
+// 2. Have 2 stim arrays - one for audio, one for display
 var youStim = ["Marks and spencers", "Sticks and stones", "Rest and relaxation"];
 var otherStim = ["Wine and dine", "Plus and minus", "Rich and famous"];
 var pracStim = [];
 var pracLength = 6;
 
 for (var i = 0; i < pracLength/2; i++) {
-  pracStim.push(prefix + youStim[i] + suffix);
-  pracStim.push(prefix + otherStim[i] + suffix);
+  pracStim.push(youStim[i]);
+  pracStim.push(otherStim[i]);
 }
 
-
-// Defines the practice stimuli to be used
-// var SMpractice_stimuli = new Array();
-// // 1 = YOU, 2 = OTHER
-// SMpractice_stimuli[0] = new SMstimuli("Wine and dine", "WINE AND DI__", 2)
-// SMpractice_stimuli[1] = new SMstimuli("Marks and spencers", "MARKS AND SPE____", 1)
-// SMpractice_stimuli[2] = new SMstimuli("Sticks and stones", "STICKS AND ST____", 1)
-// SMpractice_stimuli[3] = new SMstimuli("Plus and minus", "PLUS AND MI___", 2)
-// SMpractice_stimuli[4] = new SMstimuli("Rest and relaxation", "REST AND RELA______", 1)
-// SMpractice_stimuli[5] = new SMstimuli("Rich and famous", "RICH AND FAM___", 2)
 
 // Defines the main task stimuli to be used
 var SMmain_stimuli = new Array();
@@ -168,39 +198,11 @@ var SMtest_instructions = {
 
 timeline.push(SM_Instructions);
 
-
-// For loop creates each trial and adds them to the timeline
-for (var i = 0; i < SMpractice_stimuli.length; i++) {
-
-  // defaults to silence and "YOU" condition
-  var audio = "sounds/Silence.wav";
-  var SMcondition = "YOU";
-  // if OTHER condition, retrives the audio to be played
-  if (SMpractice_stimuli[i].condition === 2) {
-    audio = "sounds/" + SMpractice_stimuli[i].phrase + ".wav";
-    SMcondition = "OTHER";
-  }
-
-  var SMresponse_trial = {
-    type: "single-audiodelay",
-    stimulus: audio,
-    prompt: "<h1>" + SMcondition + "</h1>" + "<p>" + SMpractice_stimuli[i].display + "</p>",
-    timing_response: 4500,
-    // careful - too long a delay and it will skip (since set to 4500ms)
-    delay: 1,
-    timing_post_trial: 500,
-    response_ends_trial: false,
-    data: {
-      phrase: SMpractice_stimuli[i].phrase,
-      display: SMpractice_stimuli[i].display,
-      condition: SMpractice_stimuli[i].condition
-    }
-  }
-
-  timeline.push(SMresponse_trial);
+var practice_block = defineSMstimuli(pracStim);
+console.log(practice_block)
+for (var i = 1; i < practice_block.length; i++) {
+  timeline.push(practice_block[i]);
 }
-
-
 
 timeline.push(SMmain_instructions)
 
