@@ -1,0 +1,277 @@
+<!doctype HTML>
+<html>
+<head>
+  <title>Dichotic Listening Task</title>
+  <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src = "jspsych-5.0.3/jspsych.js"></script>
+  <script src = "jspsych-5.0.3/plugins/jspsych-text.js"></script>
+  <script src = "jspsych-5.0.3/plugins/jspsych-single-stim.js"></script>
+  <script src = "jspsych-5.0.3/plugins/jspsych-single-audio.js"></script>
+  <link href="jspsych-5.0.3/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+</head>
+
+<body>
+  <div id="jspsych_target"></div>
+</body>
+<script>
+
+// Defines helper functions
+//
+//
+
+// Stimuli constructor to define stimuli and correct response (cresp) for right and left ear
+function Stimuli(LEstim, REstim, LEcresp, REcresp) {
+  this.LEstim = LEstim;
+  this.REstim = REstim;
+  this.LEcresp = LEcresp;
+  this.REcresp = REcresp;
+}
+
+/**
+ * Randomize array element order in-place.
+ * Using Durstenfeld shuffle algorithm.
+ */
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
+
+// Helps to define the jsPsych variables to display the stimuli
+function defineDLStimuli(stimArray) {
+  // For loop defines the trials and adds them to the timeline
+  var trial_array = [];
+  for (var i = 0; i < stimArray.length; i++) {
+
+    // retrieves the proper audio information for the ith trial
+    var audio = stimArray[i].LEstim + "_" + stimArray[i].REstim
+
+    // plays the audio file
+    var audio_trial = {
+      type: "single-audio",
+      //timing_response: 900,
+      timing_post_trial: 500,
+      //response_ends_trial: false,
+      stimulus: "sounds/" + audio + ".wav",
+      choices: ["1", "2", "3", "4", "5", "6"],
+      prompt: "<p>Which sound did you hear?</p>" + "<ol><li>ba</li><li>da</li><li>ga</li><li>pa</li><li>ta</li><li>ka</li></ol>",
+      data: {
+        audio: audio,
+        LEstim: stimArray[i].LEstim,
+        REstim: stimArray[i].REstim,
+        LEcresp: stimArray[i].LEcresp,
+        REcresp: stimArray[i].REcresp
+      },
+      on_finish: function(data) {
+        // Converts key_press character code to the actual key (49 -> 1), then to class integer
+        var p_response = parseInt(String.fromCharCode(data.key_press));
+
+        // Checks if response accurately matched the sound played in left ear or right ear
+        var LEacc = false;
+        var REacc = false;
+        if (p_response === data.LEcresp) {
+          LEacc = true;
+        } else if (p_response === data.REcresp) {
+          REacc = true;
+        }
+        // Adds participant response and accuracy to the trial data
+        jsPsych.data.addDataToLastTrial({p_response: p_response, LEacc: LEacc, REacc: REacc});
+      }
+    }
+    trial_array[i] = audio_trial
+  }
+  // Randomises order of the trial list
+  trial_array = shuffleArray(trial_array)
+  return trial_array
+}
+
+
+// Defines stimuli
+//
+//
+
+// creates blank array for practice stimuli
+var practice_stimuli = new Array();
+// uses the Stimuli constructor to define leftear, rightear, LEcresp, REcresp for each trial
+practice_stimuli[0] = new Stimuli("ka", "ta", 6, 5);
+practice_stimuli[1] = new Stimuli("ga", "pa", 3, 4);
+practice_stimuli[2] = new Stimuli("da", "ba", 2, 1);
+
+
+var main_stimuli = new Array();
+// ta filenames were origingally "pta" when they were the first sound - easier to code this way
+// could reduce code further by including switch statement in function - since the cresp is always linked to the string it represents
+main_stimuli[0] = new Stimuli("ka", "ta", 6, 5);
+main_stimuli[1] = new Stimuli("ga", "pa", 3, 4);
+main_stimuli[2] = new Stimuli("da", "ka", 2, 6);
+main_stimuli[3] = new Stimuli("da", "ga", 2, 3);
+main_stimuli[4] = new Stimuli("ta", "ka", 5, 6);
+main_stimuli[5] = new Stimuli("ga", "da", 3, 2);
+main_stimuli[6] = new Stimuli("ba", "ka", 1, 6);
+main_stimuli[7] = new Stimuli("da", "ba", 2, 1);
+main_stimuli[8] = new Stimuli("ka", "ba", 6, 1);
+main_stimuli[9] = new Stimuli("ka", "pa", 6, 4);
+main_stimuli[10] = new Stimuli("ta", "ta", 5, 5);
+main_stimuli[11] = new Stimuli("ga", "ka", 3, 6);
+main_stimuli[12] = new Stimuli("pa", "ta", 4, 5);
+main_stimuli[13] = new Stimuli("ga", "ga", 3, 3);
+main_stimuli[14] = new Stimuli("ka", "da", 6, 2);
+main_stimuli[15] = new Stimuli("pa", "ka", 4, 6);
+main_stimuli[16] = new Stimuli("ga", "ta", 3, 5);
+main_stimuli[17] = new Stimuli("ta", "ga", 5, 3);
+main_stimuli[18] = new Stimuli("ba", "ta", 1, 5);
+main_stimuli[19] = new Stimuli("pa", "da", 4, 2);
+main_stimuli[20] = new Stimuli("ta", "pa", 5, 4);
+main_stimuli[21] = new Stimuli("ta", "da", 5, 2);
+main_stimuli[22] = new Stimuli("da", "pa", 2, 4);
+main_stimuli[23] = new Stimuli("pa", "ga", 4, 3);
+main_stimuli[24] = new Stimuli("ta", "ba", 5, 1);
+main_stimuli[25] = new Stimuli("da", "ta", 2, 5);
+main_stimuli[26] = new Stimuli("ba", "ga", 1, 3);
+main_stimuli[27] = new Stimuli("ba", "pa", 1, 4);
+main_stimuli[28] = new Stimuli("da", "da", 2, 2);
+main_stimuli[29] = new Stimuli("ka", "ka", 6, 6);
+main_stimuli[30] = new Stimuli("ba", "da", 1, 2);
+main_stimuli[31] = new Stimuli("pa", "ba", 4, 1);
+main_stimuli[32] = new Stimuli("ka", "ga", 6, 3);
+main_stimuli[33] = new Stimuli("ga", "ba", 3, 1);
+main_stimuli[34] = new Stimuli("pa", "pa", 4, 4);
+main_stimuli[35] = new Stimuli("ba", "ba", 1, 1);
+
+
+
+
+// Defining jsPsych variables
+//
+//
+
+var repeat = [];
+var timeline = [];
+
+var headphone_check = {
+  type: "text",
+  text: "<p>Please make sure that you have headphones on, and that the volume is set to a comfortable level.</p>" +
+  "<p>Press any key to begin the task.</p>",
+}
+
+var instructions_block = {
+  type: "text",
+  text: "<h1>Instructions</h1>" +
+  "<p>Please listen to the presented sounds through headphones.</p>" +
+  "<p>After each presentation, you should report the sound you heard, by pressing the corresponding key.</p>" +
+  "<p>Sometimes it will sound as if you hear two different sounds at the same time. Don't worry about this," +
+  "but just pick the sound you seemed to hear best or most clearly. Don't spend time thinking," +
+  "but just pick a sound as soon as it has been presented.</p>" +
+  "<p>Press any key to continue</p>",
+  timing_post_trial: 0
+}
+
+var instructions_block2 = {
+  type: "text",
+  text: "<h1>Instructions</h1>" +
+  "<p>There are six sounds you can choose from:</p>" +
+  "<ol><li>ba</li><li>da</li><li>ga</li><li>pa</li><li>ta</li><li>ka</li></ol>" +
+  "<p>You will be asked to press a number key corresponding to one of these sounds, which you will be reminded of throughout the task</p>" +
+  "<p>Press any key to begin a short practice.</p>",
+  timing_post_trial: 500
+}
+
+var block1_instructions = {
+  type: "text",
+  text: "We will now begin the 1st block of the main task. Press any key to begin"
+}
+
+var LE_block_instructions = {
+  type: "text",
+  text: 'Now, please listen only to the LEFT ear and report only the sound you hear in that ear. If you hear another sound at the same time in the right ear, you should ignore it and concentrate only on the left ear.'
+}
+
+var RE_block_instructions = {
+  type: "text",
+  text: 'Now, please listen only to the RIGHT ear and report only the sound you hear in that ear. If you hear another sound at the same time in the left ear, you should ignore it and concentrate only on the right ear.'
+}
+
+
+// displays an error in console - it's because stimulus is set to html, but it will still run
+var ask_repeat = {
+  type: "single-stim",
+  is_html: true,
+  choices: ['1', '9'],
+  stimulus: "<p>Would you like to repeat the practice?</p> <p>Press 1 if YES, Press 9 to continue onto the main task.</p>"
+}
+
+// Take the response of the previous trial (the ask_repeat)
+// If yes - runs the repeat variable, which is a re-run of the practice block
+var repeat_practice = {
+  timeline: repeat,
+  conditional_function: function() {
+    var data = jsPsych.data.getLastTrialData();
+    if (data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode('9')) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+}
+
+var practice_block = defineDLStimuli(practice_stimuli)
+var block1 = defineDLStimuli(main_stimuli)
+var LE_block = defineDLStimuli(main_stimuli)
+var RE_block = defineDLStimuli(main_stimuli)
+
+var end_task = {
+  type: 'text',
+  text: "End of task. Thank you for taking part!"
+}
+
+/* Pushing stuff to the timeline
+//
+//*/
+
+timeline.push(headphone_check);
+timeline.push(instructions_block);
+timeline.push(instructions_block2);
+
+
+
+for (var i = 0; i < practice_block.length; i++) {
+  timeline.push(practice_block[i])
+  repeat.push(practice_block[i])
+}
+
+timeline.push(ask_repeat);
+timeline.push(repeat_practice);
+
+//Block 1 - No forced attention
+timeline.push(block1_instructions)
+for (var i = 0; i < block1.length; i++) {
+  timeline.push(block1[i])
+}
+
+// LE block - Pay attention to left ear
+timeline.push(LE_block_instructions)
+for (var i = 0; i < LE_block.length; i++) {
+  timeline.push(LE_block[i])
+}
+
+// RE block - Pay attention to right ear
+timeline.push(RE_block_instructions)
+for (var i = 0; i < RE_block.length; i++) {
+  timeline.push(RE_block[i])
+}
+
+timeline.push(end_task);
+
+jsPsych.init({
+  display_element: $("#jspsych_target"),
+  timeline: timeline,
+  on_finish: function() {
+    jsPsych.data.displayData('csv');
+  }
+});
+</script>
+</html>
