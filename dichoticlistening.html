@@ -19,14 +19,6 @@
 //
 //
 
-// Stimuli constructor to define stimuli and correct response (cresp) for right and left ear
-function Stimuli(LEstim, REstim, LEcresp, REcresp) {
-  this.LEstim = LEstim;
-  this.REstim = REstim;
-  this.LEcresp = LEcresp;
-  this.REcresp = REcresp;
-}
-
 /**
  * Randomize array element order in-place.
  * Using Durstenfeld shuffle algorithm.
@@ -42,13 +34,13 @@ function shuffleArray(array) {
 }
 
 // Helps to define the jsPsych variables to display the stimuli
-function defineDLStimuli(stimArray) {
+function defineDLStimuli(stimArray, LEcresp, REcresp, randomise) {
   // For loop defines the trials and adds them to the timeline
   var trial_array = [];
   for (var i = 0; i < stimArray.length; i++) {
 
     // retrieves the proper audio information for the ith trial
-    var audio = stimArray[i].LEstim + "_" + stimArray[i].REstim
+    var audio = prefix + stimArray[i] + suffix
 
     // plays the audio file
     var audio_trial = {
@@ -56,15 +48,14 @@ function defineDLStimuli(stimArray) {
       //timing_response: 900,
       timing_post_trial: 500,
       //response_ends_trial: false,
-      stimulus: "sounds/" + audio + ".wav",
+      stimulus: audio,
       choices: ["1", "2", "3", "4", "5", "6"],
       prompt: "<p>Which sound did you hear?</p>" + "<ol><li>ba</li><li>da</li><li>ga</li><li>pa</li><li>ta</li><li>ka</li></ol>",
       data: {
         audio: audio,
-        LEstim: stimArray[i].LEstim,
-        REstim: stimArray[i].REstim,
-        LEcresp: stimArray[i].LEcresp,
-        REcresp: stimArray[i].REcresp
+        stim: stimArray[i],
+        LEcresp: LEcresp[i],
+        REcresp: REcresp[i]
       },
       on_finish: function(data) {
         // Converts key_press character code to the actual key (49 -> 1), then to class integer
@@ -84,63 +75,45 @@ function defineDLStimuli(stimArray) {
     }
     trial_array[i] = audio_trial
   }
-  // Randomises order of the trial list
+  // randomises list if wanted
+  if (randomise) {
   trial_array = shuffleArray(trial_array)
+}
   return trial_array
 }
 
-
+/*
 // Defines stimuli
-//
-//
+*/
 
-// creates blank array for practice stimuli
-var practice_stimuli = new Array();
-// uses the Stimuli constructor to define leftear, rightear, LEcresp, REcresp for each trial
-practice_stimuli[0] = new Stimuli("ka", "ta", 6, 5);
-practice_stimuli[1] = new Stimuli("ga", "pa", 3, 4);
-practice_stimuli[2] = new Stimuli("da", "ba", 2, 1);
+// Switching to arrays
+// Array of strings ("ka_ta") - problem is linking with correct response
+// 1. Switch statement that reads beginning and end of string to provide cresp
+// 2. Seperate arrays giving right and left ear correct responses
+
+var prefix = "sounds/";
+var suffix = ".wav";
+
+// Defines practice stimuli
+var DL_prac = ["ka_ta", "ga_pa", "da_ba"];
+var DL_prac_LE = [6, 3, 2];
+var DL_prac_RE = [5, 4, 1];
+
+// Stimuli for main task
+var DL_main = ["ka_ta", "ga_pa", "da_ka", "da_ga", "ta_ka", "ga_da", "ba_ka",
+"da_ba", "ka_ba", "ka_pa", "ta_ta", "ga_ka", "pa_ta", "ga_ga", "ka_da", "pa_ka",
+"ga_ta", "ta_ga", "ba_ta", "pa_da", "ta_pa", "ta_da", "da_pa", "pa_ga", "ta_ba",
+"da_ta", "ba_ga", "ba_pa", "da_da", "ka_ka", "ba_da", "pa_ba", "ka_ga", "ga_ba",
+"pa_pa", "ba_ba"]
+
+// Left ear correct responses for main task
+var DL_main_LE = [6, 3, 2, 2, 5, 3, 1, 2, 6, 6, 5, 3, 4, 3, 6, 4, 3, 5, 1, 4, 5,
+  5, 2, 4, 5, 2, 1, 1, 2, 6, 1, 4, 6, 3, 4, 1]
+// Right ear correct responses for main task
+var DL_main_RE = [5, 4, 6, 3, 6, 2, 6, 1, 1, 4, 5, 6, 5, 3, 2, 6, 5, 3, 5, 2, 4,
+  2, 4, 3, 1, 5, 3, 4, 2, 6, 2, 1, 3, 1, 4, 1]
 
 
-var main_stimuli = new Array();
-// ta filenames were origingally "pta" when they were the first sound - easier to code this way
-// could reduce code further by including switch statement in function - since the cresp is always linked to the string it represents
-main_stimuli[0] = new Stimuli("ka", "ta", 6, 5);
-main_stimuli[1] = new Stimuli("ga", "pa", 3, 4);
-main_stimuli[2] = new Stimuli("da", "ka", 2, 6);
-main_stimuli[3] = new Stimuli("da", "ga", 2, 3);
-main_stimuli[4] = new Stimuli("ta", "ka", 5, 6);
-main_stimuli[5] = new Stimuli("ga", "da", 3, 2);
-main_stimuli[6] = new Stimuli("ba", "ka", 1, 6);
-main_stimuli[7] = new Stimuli("da", "ba", 2, 1);
-main_stimuli[8] = new Stimuli("ka", "ba", 6, 1);
-main_stimuli[9] = new Stimuli("ka", "pa", 6, 4);
-main_stimuli[10] = new Stimuli("ta", "ta", 5, 5);
-main_stimuli[11] = new Stimuli("ga", "ka", 3, 6);
-main_stimuli[12] = new Stimuli("pa", "ta", 4, 5);
-main_stimuli[13] = new Stimuli("ga", "ga", 3, 3);
-main_stimuli[14] = new Stimuli("ka", "da", 6, 2);
-main_stimuli[15] = new Stimuli("pa", "ka", 4, 6);
-main_stimuli[16] = new Stimuli("ga", "ta", 3, 5);
-main_stimuli[17] = new Stimuli("ta", "ga", 5, 3);
-main_stimuli[18] = new Stimuli("ba", "ta", 1, 5);
-main_stimuli[19] = new Stimuli("pa", "da", 4, 2);
-main_stimuli[20] = new Stimuli("ta", "pa", 5, 4);
-main_stimuli[21] = new Stimuli("ta", "da", 5, 2);
-main_stimuli[22] = new Stimuli("da", "pa", 2, 4);
-main_stimuli[23] = new Stimuli("pa", "ga", 4, 3);
-main_stimuli[24] = new Stimuli("ta", "ba", 5, 1);
-main_stimuli[25] = new Stimuli("da", "ta", 2, 5);
-main_stimuli[26] = new Stimuli("ba", "ga", 1, 3);
-main_stimuli[27] = new Stimuli("ba", "pa", 1, 4);
-main_stimuli[28] = new Stimuli("da", "da", 2, 2);
-main_stimuli[29] = new Stimuli("ka", "ka", 6, 6);
-main_stimuli[30] = new Stimuli("ba", "da", 1, 2);
-main_stimuli[31] = new Stimuli("pa", "ba", 4, 1);
-main_stimuli[32] = new Stimuli("ka", "ga", 6, 3);
-main_stimuli[33] = new Stimuli("ga", "ba", 3, 1);
-main_stimuli[34] = new Stimuli("pa", "pa", 4, 4);
-main_stimuli[35] = new Stimuli("ba", "ba", 1, 1);
 
 
 
@@ -217,11 +190,10 @@ var repeat_practice = {
     }
   }
 }
-
-var practice_block = defineDLStimuli(practice_stimuli)
-var block1 = defineDLStimuli(main_stimuli)
-var LE_block = defineDLStimuli(main_stimuli)
-var RE_block = defineDLStimuli(main_stimuli)
+var practice_block = defineDLStimuli(DL_prac, DL_prac_LE, DL_prac_RE)
+var block1 = defineDLStimuli(DL_main, DL_main_LE, DL_main_RE, 1)
+var LE_block = defineDLStimuli(DL_main, DL_main_LE, DL_main_RE, 1)
+var RE_block = defineDLStimuli(DL_main, DL_main_LE, DL_main_RE, 1)
 
 var end_task = {
   type: 'text',
@@ -236,15 +208,13 @@ timeline.push(headphone_check);
 timeline.push(instructions_block);
 timeline.push(instructions_block2);
 
-
-
 for (var i = 0; i < practice_block.length; i++) {
   timeline.push(practice_block[i])
   repeat.push(practice_block[i])
 }
 
-timeline.push(ask_repeat);
-timeline.push(repeat_practice);
+// timeline.push(ask_repeat);
+// timeline.push(repeat_practice);
 
 //Block 1 - No forced attention
 timeline.push(block1_instructions)
@@ -273,5 +243,6 @@ jsPsych.init({
     jsPsych.data.displayData('csv');
   }
 });
+
 </script>
 </html>
