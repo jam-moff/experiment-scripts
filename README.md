@@ -1,4 +1,7 @@
 # experiment-scripts
 Collection of experimental scripts that I'm working on
 
-Unless stated all scripts require the master branch of jsPsych to run (https://github.com/jspsych/jsPsych)
+Makes use of:
+jsPsych (https://github.com/jspsych/jsPsych)
+jQuery (https://jquery.com/)
+HeadphoneCheck (https://github.com/mcdermottLab/HeadphoneCheck)
