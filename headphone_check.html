@@ -1,0 +1,84 @@
+<html>
+<head>
+  <title>Headphone Check</title>
+  <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://s3.amazonaws.com/mcd-headphone-check/v1.0/src/HeadphoneCheck.min.js"></script>
+  <style>
+  .hc-buttonset-vertical label{
+    display: block;
+  }
+  .hc-trial-div {
+    border: 5px solid black;
+    display: table;
+    padding: 5px;
+    margin: 5px;
+  }
+  .hc-calibration-div {
+    position: relative;
+    width: 30%;
+    margin: 5px;
+  }
+
+  a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+
+    text-decoration: none;
+    color: initial;
+}
+  </style>
+
+  </head>
+
+  <body>
+    <div id="hc-container"></div>
+    <button type="button" id="MyButton">Start</button>
+
+  </body>
+
+  <script>
+
+  $(document).ready(function() {
+    var $finish = $("<p>Well done for completing the headphone check. Click the button below to begin the main experiment! Please keep your headphones on throughout.</p>");
+    var $outButton = $("<a href='ravens_master.html' class='button'>Go to Experiment</a>")
+    var $repeatButton = $("<a href='headphone_check.html' class='button'>Retry</a>")
+    var $fail = $("<p>You need to get at least 5/6 correct to take part in the experiment. Please use headphones and press the button below to retry the task</p>")
+
+  $('#MyButton').click(function(){
+    $('#MyButton').hide();
+    HeadphoneCheck.runHeadphoneCheck({
+      trialsPerPage: 6
+  });
+
+
+
+    $(document).on('hcHeadphoneCheckEnd', function(event, data) {
+      var headphoneCheckDidPass = data.didPass;
+      var headphoneCheckData = data.data;
+      var didPassMessage = headphoneCheckDidPass ? 'passed' : 'failed';
+      alert('Screening task ' + '. ' + headphoneCheckData.totalCorrect +
+      '/' + headphoneCheckData.stimIDList.length + ' trials correct');
+      if (headphoneCheckDidPass) {
+      $("body").append($finish);
+      $("body").append($outButton);
+    } else {
+      $("body").append($fail);
+      $("body").append($repeatButton);
+
+    }
+    });
+  });
+
+})
+  </script>
+
+
+
+
+
+
+
+
+
+</html>

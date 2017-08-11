@@ -1,0 +1,331 @@
+<!doctype HTML>
+<html>
+<head>
+  <title>Source Memory master</title>
+  <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src = "jsPsych-master/jspsych.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-instructions.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-html-keyboard-response.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-audio-keyboard-response.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-external-html.js"></script>
+  <link href="jsPsych-master/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+
+
+
+</head>
+
+<body>
+
+</body>
+
+<script>
+
+
+/*
+** Could I combine both the display and test functions?
+** Add ability to repeat practice
+
+/*
+Defining functions to be used in script
+*/
+
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
+
+function save_data(data){
+  var data_table = 'sourcememory'; // change this for different experiments
+  $.ajax({
+    type:'post',
+    cache: false,
+    url: 'save_data_sql.php', // change this to point to your php file.
+    data: {
+      table: data_table,
+      json: JSON.stringify(data)
+    },
+    success: function(output) { console.log(output); } // write the result to javascript console
+  });
+}
+
+// returns the time completed
+function timeNow() {
+  var d = new Date();
+  var h = (d.getHours()<10?'0':'') + d.getHours();
+  var m = (d.getMinutes()<10?'0':'') + d.getMinutes();
+  console.log(h + ':' + m);
+  return h + ':' + m;
+
+}
+
+function defineSMstimuli(stim, display) {
+  var trialArray = [];
+
+  // For loop creates each trial and adds them to the timeline
+  for (var i = 0; i < stim.length; i++) {
+
+    var phrase = stim[i];
+    var audio = prefix + "Silence" + suffix;
+    var condition = "YOU";
+    var disp = display[i].toUpperCase();
+    // if it is NOT in you condition, changes audio to stimulus
+    if ($.inArray(phrase, youStim) === -1) {
+      audio = prefix + stim[i] + suffix;
+      condition = "OTHER";
+    }
+    var SMcondition_trial = {
+      type: 'html-keyboard-response',
+      stimulus: "<strong>" + condition + "</strong>",
+      trial_duration: 2000,
+      response_ends_trial: false,
+      timing_post_trial: 0
+    }
+
+    var SMresponse_trial = {
+      type: "audio-keyboard-response",
+      stimulus: audio,
+      prompt: "<p>" + disp + "</p>",
+      trial_duration: 4000,
+      timing_post_trial: 500,
+      response_ends_trial: false,
+      data: {
+        phrase: phrase,
+        display: disp,
+        cond: condition
+      }
+    }
+    trialArray.push(SMcondition_trial);
+    trialArray.push(SMresponse_trial);
+  }
+
+  return trialArray
+}
+
+function defineSMtestStimuli(stim) {
+  var trialArray = [];
+
+  for (var i = 0; i < stim.length; i++) {
+
+    var phrase = stim[i].toUpperCase();
+    var cresp = "N"
+
+    // Determines whether stimuli is new, me or other
+    if ($.inArray(stim[i], youStim) !== -1) {
+      cresp = "M";
+    } else if ($.inArray(stim[i], otherStim) !== -1) {
+      cresp = "O";
+    }
+
+    var SMtest_responsetrial = {
+      type: "html-keyboard-response",
+      choices: ["m", "o", "n"],
+      prompt: "<p>'M' = ME</p> <br> <p>'O' = OTHER</p> <br> <p>'N' = NEW</p>",
+      timing_post_trial: 1000,
+      stimulus: "<p>" + phrase + "</p>",
+      data: {
+        phrase: phrase,
+        cresp: cresp
+      },
+      on_finish: function(data) {
+        var p_response = String.fromCharCode(data.key_press);
+        var acc = false;
+        if (p_response === data.cresp) {
+          acc = true
+        }
+        jsPsych.data.addDataToLastTrial({p_response: p_response, acc: acc});
+      }
+    }
+    trialArray.push(SMtest_responsetrial);
+
+
+  }
+  // randomises order
+  trialArray = shuffleArray(trialArray)
+  return trialArray
+}
+
+/*
+*      Definining stimuli to be used in study
+*/
+// prefix and suffix for where to find audio files
+var prefix = "sounds/"
+var suffix = ".wav"
+
+// // // generates random id number
+ var subject_id = Math.floor((Math.random()*100000000)+1);
+// //
+// // returns the date and time completed
+ var today = new Date();
+var dd = today.getDate();
+var mm = today.getMonth()+1; //January is 0!
+var yyyy = today.getFullYear();
+
+if(dd<10) {
+  dd='0'+dd
+}
+if(mm<10) {
+  mm='0'+mm
+}
+
+today = dd+'/'+mm+'/'+yyyy;
+
+var dt = new Date();
+var time_completed = dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds();
+
+
+// What is played
+// Unable to counterbalance now because only have audio files for the "other" stim
+  var youStim = [ "Marks and spencers", "Sticks and stones", "Rest and relaxation",
+"Knife and fork", "Health and safety", "Table and chairs", "Husband and wife",
+"Mother and father", "Romeo and juliet", "Accident and emergency", "Apples and pears",
+"Snakes and ladders", "East and west", "Rock and roll", "Friends and family" ];
+
+var otherStim = ["Wine and dine", "Plus and minus", "Rich and famous",
+"Cops and robbers", "Trial and error", "Life and death", "Doom and gloom",
+"Aunt and uncle", "Batman and robin", "Gin and tonic", "North and south",
+"Winners and losers", "Black and white", "Hot and cold", "Bed and breakfast"];
+
+
+var newStim = ["Time and again", "Drum and bass", "Skin and bone", "Suited and booted",
+"Map and compass", "Shampoo and conditioner", "Done and dusted", "Town and gown",
+"Run and hide", "Trade and industry", "Ebony and ivory", "Live and learn"];
+
+// What is displayed visually
+var youDisp = ["Marks and Spenc___", "Sticks and sto___", "Rest and rela______",
+"Knife and fo__", "Health and saf___", "Table and ch____", "Husband and wi__",
+"Mother and fa____", "Romeo and ju____", "Accident and emer_____", "Apples and pe___",
+"Snakes and lad____", "East and we__", "Rock and ro__", "Friends and fam___"];
+
+var otherDisp = ["Wine and di__", "Plus and min__", "Rich and fam___",
+"Cops and rob____", "Trial and er___", "Life and de___", "Doom and gl___",
+"Aunt and un___", "Batman and Ro___", "Gin and to___", "North and so___",
+"Winners and lo____", "Black and wh___", "Hot and co__", "Bed and brea_____"];
+
+
+var pracStim = [];
+var pracDisp = [];
+var pracLength = 6;
+
+var mainStim = [];
+var mainDisp = [];
+var mainLength = 24;
+
+// Adds each practice stimuli and their display into a usable array
+for (i = 0; i < pracLength/2; i++) {
+  pracStim.push(youStim[i]);
+  pracStim.push(otherStim[i]);
+  pracDisp.push(youDisp[i]);
+  pracDisp.push(otherDisp[i]);
+}
+
+// Adds each main stimuli and their display into a usable array
+// Since prac and main stim are combined, "j" starts at 3,
+for (j = pracLength/2; j < mainLength/2; j++) {
+  mainStim.push(youStim[j]);
+  mainStim.push(otherStim[j]);
+  mainDisp.push(youDisp[j]);
+  mainDisp.push(otherDisp[j]);
+}
+
+// defines test stimuli as the main stimuli + some new stimuli
+var testStim = mainStim.concat(newStim);
+
+/*
+* Defining jsPsych variables
+*/
+
+// the experiment timeline - this is added to throughout the script
+var timeline = [];
+
+
+
+var SM_Instructions = {
+  type: "instructions",
+  pages: ["In this task, you will be presented with a series of phrases, which are partially complete.",
+  "Above each phrase will be the word 'YOU' or the word 'OTHER'. When the word 'YOU' is presented, you should complete the phrase by reading it it and saying the completed phrase in your head. When the word 'OTHER' is presented, you will hear a recorded voice completing the phrase. In the 'YOU' condition, you will have 4 seconds to complete the phrase.",
+  "You will now begin a short practice."],
+  show_clickable_nav: true
+}
+
+var SMmain_instructions = {
+  type: "instructions",
+  pages: ["Instructions",
+  "We will now begin the main task"],
+  show_clickable_nav: true
+}
+
+var SMtest_instructions = {
+  type: 'instructions',
+  pages: ["Instructions",
+  "You will now be presented with the phrases from earlier, some of which you completed and some of which you heard someone else complete. You will also be presented with some new phrases",
+  "Your job is to decide whether each phrase is new (press the 'N' key), whether you completed the phrase (press the 'M' key), or whether you heard someone else complete the phrase (press the 'O' key). There will be a reminder on screen of which keys to press",
+  "Please begin when you are ready"],
+  show_clickable_nav: true
+}
+
+
+
+/*
+* Adding trials to the timeline
+*/
+
+timeline.push(SM_Instructions);
+
+// Makes use of a specialised function for defining SM stimuli (see functions)
+var practice_block = defineSMstimuli(pracStim, pracDisp);
+// For loop then adds these to the timeline
+for (var i = 0; i < practice_block.length; i++) {
+  timeline.push(practice_block[i]);
+}
+
+timeline.push(SMmain_instructions)
+
+var main_block = defineSMstimuli(mainStim, mainDisp);
+for (var i = 0; i < main_block.length; i++) {
+  timeline.push(main_block[i]);
+}
+
+timeline.push(SMtest_instructions);
+
+// Note that test stimuli uses a different function
+var test_block = defineSMtestStimuli(testStim);
+for (var i = 0; i < test_block.length; i++) {
+  timeline.push(test_block[i]);
+}
+
+
+// Adds timestamp to data file
+jsPsych.data.addProperties({subject: subject_id, date_completed: today, time_completed: time_completed});
+
+function saveData() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'writedata.php'); // change 'write_data.php' to point to php script.
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if(xhr.status == 200){
+      console.log(xhr.responseText)
+      var response = JSON.parse(xhr.responseText);
+      console.log(response.success);
+    }
+  };
+  xhr.send(jsPsych.data.get().json());
+}
+
+jsPsych.init({
+  //display_element: $("#jspsych_target"),
+  timeline: timeline,
+  on_finish: function() {
+    //save_data(data);
+    jsPsych.data.displayData('csv');
+    //saveData();
+
+  }
+});
+
+</script>
+</html>

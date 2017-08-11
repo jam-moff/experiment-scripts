@@ -1,17 +1,18 @@
-<!doctype HTML>
+ <!doctype HTML>
 <html>
 <head>
   <title>Dichotic Listening Task</title>
   <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script src = "jspsych-5.0.3/jspsych.js"></script>
-  <script src = "jspsych-5.0.3/plugins/jspsych-text.js"></script>
-  <script src = "jspsych-5.0.3/plugins/jspsych-single-stim.js"></script>
-  <script src = "jspsych-5.0.3/plugins/jspsych-single-audio.js"></script>
-  <link href="jspsych-5.0.3/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+  <script src = "jsPsych-master/jspsych.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-instructions.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-html-keyboard-response.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-audio-keyboard-response.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-external-html.js"></script>
+  <link href="jsPsych-master/css/jspsych.css" rel="stylesheet" type="text/css"></link>
 </head>
 
 <body>
-  <div id="jspsych_target"></div>
+
 </body>
 <script>
 
@@ -58,8 +59,8 @@ function defineDLStimuli(stimArray, LEcresp, REcresp, randomise) {
 
     // plays the audio file
     var audio_trial = {
-      type: "single-audio",
-      timing_response: 1000,
+      type: "audio-keyboard-response",
+      trial_duration: 1000,
       //timing_post_trial: 500,
       response_ends_trial: false,
       stimulus: audio,
@@ -67,8 +68,7 @@ function defineDLStimuli(stimArray, LEcresp, REcresp, randomise) {
     }
 
     var response_trial = {
-      type: "single-stim",
-      is_html: true,
+      type: "html-keyboard-response",
       choices: ["1", "2", "3", "4", "5", "6"],
       timing_post_trial: 500,
       stimulus: "<p>Which sound did you hear?</p>" + "<ol><li>ba</li><li>da</li><li>ga</li><li>pa</li><li>ta</li><li>ka</li></ol>",
@@ -145,71 +145,74 @@ var DL_main_RE = [5, 4, 6, 3, 6, 2, 6, 1, 1, 4, 5, 6, 5, 3, 2, 6, 5, 3, 5, 2, 4,
 var repeat = [];
 var timeline = [];
 
-var headphone_check = {
-  type: "text",
-  text: "<p>Please make sure that you have headphones on, and that the volume is set to a comfortable level.</p>" +
-  "<p>Press any key to begin the task.</p>",
-}
 
 var instructions_block = {
-  type: "text",
-  text: "<h1>Instructions</h1>" +
+  type: "instructions",
+  pages: ["<h1>Instructions</h1>" +
   "<p>Please listen to the presented sounds through headphones.</p>" +
   "<p>After each presentation, you should report the sound you heard, by pressing the corresponding key.</p>" +
   "<p>Sometimes it will sound as if you hear two different sounds at the same time. Don't worry about this," +
   "but just pick the sound you seemed to hear best or most clearly. Don't spend time thinking," +
   "but just pick a sound as soon as it has been presented.</p>" +
   "<p>Press any key to continue</p>",
-  timing_post_trial: 0
-}
-
-var instructions_block2 = {
-  type: "text",
-  text: "<h1>Instructions</h1>" +
+  "<h1>Instructions</h1>" +
   "<p>There are six sounds you can choose from:</p>" +
   "<ol><li>ba</li><li>da</li><li>ga</li><li>pa</li><li>ta</li><li>ka</li></ol>" +
   "<p>You will be asked to press a number key corresponding to one of these sounds, which you will be reminded of throughout the task</p>" +
-  "<p>Press any key to begin a short practice.</p>",
-  timing_post_trial: 500
+  "<p>Press any key to begin a short practice.</p>"],
+  show_clickable_nav: true
 }
 
+// var instructions_block2 = {
+//   type: "text",
+//   text: "<h1>Instructions</h1>" +
+//   "<p>There are six sounds you can choose from:</p>" +
+//   "<ol><li>ba</li><li>da</li><li>ga</li><li>pa</li><li>ta</li><li>ka</li></ol>" +
+//   "<p>You will be asked to press a number key corresponding to one of these sounds, which you will be reminded of throughout the task</p>" +
+//   "<p>Press any key to begin a short practice.</p>",
+//   timing_post_trial: 500
+// }
+
 var block1_instructions = {
-  type: "text",
-  text: "We will now begin the 1st block of the main task. Press any key to begin"
+  type: "instructions",
+  pages: ["We will now begin the 1st block of the main task. Press any key to begin"],
+  show_clickable_nav: true
 }
 
 var LE_block_instructions = {
-  type: "text",
-  text: 'Now, please listen only to the LEFT ear and report only the sound you hear in that ear. If you hear another sound at the same time in the right ear, you should ignore it and concentrate only on the left ear.'
+  type: "instructions",
+  pages: ['Now, please listen only to the LEFT ear and report only the sound you hear in that ear. If you hear another sound at the same time in the right ear, you should ignore it and concentrate only on the left ear.'],
+  show_clickable_nav: true
 }
 
 var RE_block_instructions = {
-  type: "text",
-  text: 'Now, please listen only to the RIGHT ear and report only the sound you hear in that ear. If you hear another sound at the same time in the left ear, you should ignore it and concentrate only on the right ear.'
+  type: "instructions",
+  pages: ['Now, please listen only to the RIGHT ear and report only the sound you hear in that ear. If you hear another sound at the same time in the left ear, you should ignore it and concentrate only on the right ear.'],
+  show_clickable_nav: true
 }
 
 
-// displays an error in console - it's because stimulus is set to html, but it will still run
-var ask_repeat = {
-  type: "single-stim",
-  is_html: true,
-  choices: ['1', '9'],
-  stimulus: "<p>Would you like to repeat the practice?</p> <p>Press 1 if YES, Press 9 to continue onto the main task.</p>"
-}
-
-// Take the response of the previous trial (the ask_repeat)
-// If yes - runs the repeat variable, which is a re-run of the practice block
-var repeat_practice = {
-  timeline: repeat,
-  conditional_function: function() {
-    var data = jsPsych.data.getLastTrialData();
-    if (data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode('9')) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-}
+// // displays an error in console - it's because stimulus is set to html, but it will still run
+// var ask_repeat = {
+//   type: "single-stim",
+//   is_html: true,
+//   choices: ['1', '9'],
+//   stimulus: "<p>Would you like to repeat the practice?</p> <p>Press 1 if YES, Press 9 to continue onto the main task.</p>"
+// }
+//
+// // Take the response of the previous trial (the ask_repeat)
+// // If yes - runs the repeat variable, which is a re-run of the practice block
+// var repeat_practice = {
+//   timeline: repeat,
+//   conditional_function: function() {
+//     var data = jsPsych.data.getLastTrialData();
+//     if (data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode('9')) {
+//       return false;
+//     } else {
+//       return true;
+//     }
+//   }
+// }
 // Defines all the dichotic listening blocks using helper function
 var practice_block = defineDLStimuli(DL_prac, DL_prac_LE, DL_prac_RE)
 var block1 = defineDLStimuli(DL_main, DL_main_LE, DL_main_RE, 1)
@@ -217,8 +220,9 @@ var LE_block = defineDLStimuli(DL_main, DL_main_LE, DL_main_RE, 1)
 var RE_block = defineDLStimuli(DL_main, DL_main_LE, DL_main_RE, 1)
 
 var end_task = {
-  type: 'text',
-  text: "End of task. Thank you for taking part!"
+  type: 'instructions',
+  pages: ["End of task. Thank you for taking part!"],
+  show_clickable_nav: true
 }
 
 
@@ -227,9 +231,8 @@ var end_task = {
 //
 //*/
 
-timeline.push(headphone_check);
 timeline.push(instructions_block);
-timeline.push(instructions_block2);
+//timeline.push(instructions_block2);
 
 for (var i = 0; i < practice_block.length; i++) {
   timeline.push(practice_block[i][0])
@@ -274,11 +277,11 @@ for (var i = 0; i < RE_block.length; i++) {
 timeline.push(end_task);
 
 jsPsych.init({
-  display_element: $("#jspsych_target"),
+  //display_element: $("#jspsych_target"),
   timeline: timeline,
   on_finish: function() {
     jsPsych.data.displayData('csv');
-    save_data(jsPsych.data.getData())
+    //save_data(jsPsych.data.getData())
   }
 });
 

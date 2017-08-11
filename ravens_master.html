@@ -1,0 +1,157 @@
+<!doctype HTML>
+<html>
+<head>
+  <title>Ravens master</title>
+  <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src = "jsPsych-master/jspsych.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-instructions.js"></script>
+  <script src = "jsPsych-master/plugins/jspsych-image-button-response.js"></script>
+  <link href="jsPsych-master/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+</head>
+
+<body>
+</body>
+
+<script>
+
+var ravens_page1 = "You will be asked to look at a pattern with one part missing. Beneath the pattern there will be several options of images which complete the pattern. Your task is to choose which image correctly completes the pattern. The following page will have an example trial."
+var ravens_page2 = "<p>Look at the top part (the pattern) of this sample problem. Notice that going across the rows, the number of horizontal lines is equal. Going down the columns, the number of squares is equal.</p><img src = 'img/Ravens/ravens_example.png'><p>Look at the solution of this sample problem. Only one of the alternatives below provides the best completion of the missing cell. The correct answer here is solution 'E'.</p><img src='img/Ravens/ravens_example2.png'>"
+var ravens_page3 = "Before we begin the main task, we will complete two practice trials. You will receive feedback for the practice trials, but not for the main task."
+
+var ravens_instructions = {
+  type: "instructions",
+  pages: [ravens_page1, ravens_page2, ravens_page3],
+  show_clickable_nav: true
+}
+
+
+var ravens_choices = ["A", "B", "C", "D", "E", "F", "G", "H"]
+
+var ravens_experiment_stim = ["ravens_exp1", "ravens_exp2", "ravens_exp3", "ravens_exp4",
+"ravens_exp5", "ravens_exp6", "ravens_exp7", "ravens_exp8", "ravens_exp9",
+"ravens_exp10", "ravens_exp11", "ravens_exp12", "ravens_exp13", "ravens_exp14",
+"ravens_exp15", "ravens_exp16"]
+var ravens_correct_response = ["B", "E", "G", "B", "C", "B", "E", "B", "B", "E", "A", "E", "A", "C", "B", "E"];
+var ravens_experiment_array = []
+// for loop quickly adds prefix and suffix for file location/type
+// creates an array that can be plugged into the trial easily
+for (i = 0; i < ravens_experiment_stim.length; i++) {
+  ravens_experiment_stim[i] = "img/Ravens/" + ravens_experiment_stim[i] + ".png"
+  ravens_experiment_array[i] = {stimulus: ravens_experiment_stim[i], data: {correct_response: ravens_correct_response[i]}}
+}
+
+var ravens_exp_trial = {
+  type: "image-button-response",
+  choices: ravens_choices,
+  timeline: ravens_experiment_array,
+  prompt: "Which image completes the pattern?",
+  // after each trial, calculates accuracy of response
+  on_finish: function(data) {
+    var p_response = ravens_choices[data.button_pressed];
+    var acc = false;
+    if (p_response === data.correct_response) {
+      acc = true
+    }
+    jsPsych.data.addDataToLastTrial({participant_response: p_response, accuracy: acc});
+  }
+
+}
+
+var ravens_practice_trial_1 = {
+  type: "image-button-response",
+  choices: ravens_choices,
+  stimulus: "img/Ravens/ravens_practice1.png",
+  prompt: "Which image completes the pattern?",
+  data: {correct_response: "C"},
+  on_finish: function(data) {
+    var p_response = ravens_choices[data.button_pressed];
+    var acc = false;
+    if (p_response === data.correct_response) {
+      acc = true
+    }
+    jsPsych.data.addDataToLastTrial({participant_response: p_response, accuracy: acc});
+  }
+}
+
+var ravens_practice_trial_2 = {
+  type: "image-button-response",
+  choices: ravens_choices,
+  stimulus: "img/Ravens/ravens_practice2.png",
+  prompt: "Which image completes the pattern?",
+  data: {correct_response: "F"},
+  on_finish: function(data) {
+    var p_response = ravens_choices[data.button_pressed];
+    var acc = false;
+    if (p_response === data.correct_response) {
+      acc = true
+    }
+    jsPsych.data.addDataToLastTrial({participant_response: p_response, accuracy: acc});
+  }
+}
+
+
+var ravens_practice_text = ["The first practice trial will start now. Click below to begin."]
+
+// Variable that will show feedback on practice trials
+var ravens_practice_feedback = {
+  type: "instructions",
+  pages: function() { return ravens_practice_text },
+  show_clickable_nav: true
+}
+
+// Loops practice trial 1 if response is false
+var ravens_practice_node_1 = {
+  timeline: [ravens_practice_feedback, ravens_practice_trial_1],
+  loop_function: function () {
+    // Retrieves data of practice trial
+    var data = jsPsych.data.get().last(1).values()[0];
+    if (data.accuracy) {
+      ravens_practice_text = ["That is correct! The second practice trial will start now."]
+      return false;
+    } else {
+      ravens_practice_text = ["That is incorrect. Click below to try again."]
+      return true;
+    }
+  }
+}
+
+// Loops practice trial 2 if response is false
+var ravens_practice_node_2 = {
+  timeline: [ravens_practice_feedback, ravens_practice_trial_2],
+  loop_function: function () {
+    // Retrieves data of practice trial
+    var data = jsPsych.data.get().last(1).values()[0];
+    if (data.accuracy) {
+      ravens_practice_text = ["That is correct! We will now move onto the main task. Click below when you are ready to begin."]
+      return false;
+    } else {
+      ravens_practice_text = ["That is incorrect. Click below to try again."]
+      return true;
+    }
+  }
+}
+
+
+
+var timeline = [];
+timeline.push(ravens_instructions)
+timeline.push(ravens_practice_node_1)
+timeline.push(ravens_practice_node_2)
+timeline.push(ravens_practice_feedback)
+timeline.push(ravens_exp_trial)
+
+
+
+jsPsych.init({
+  //display_element: $("#jspsych_target"),
+  timeline: timeline,
+  on_finish: function() {
+    //save_data(data);
+
+    jsPsych.data.displayData('csv');
+    //saveData();
+  }
+});
+</script>
+
+</html>
